@@ -21,7 +21,7 @@ if device == 'cuda':
 
 
 transform = transforms.Compose([
-    # transforms.Grayscale(num_output_channels=1),
+    transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor()
 ])
 
@@ -29,7 +29,7 @@ train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/trai
 train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
 
 transform = transforms.Compose([
-    # transforms.Grayscale(num_output_channels=1),
+    transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor(),
     transforms.Resize((32, 32))
 ])
@@ -116,6 +116,7 @@ class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes=1000, zero_init_residual=False):
         super(ResNet, self).__init__()
         self.inplanes = 16
+        # 채널 개수에 따라서 수정되는 부분
         self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1, bias=False)
         # self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
@@ -190,16 +191,16 @@ netLayer = 152
 # resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 721, True).to(device) 
 
 # resnet 152
-# resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device) 
+resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device) 
 # print(resnetN)
 
 # resnet 152 pretrained
 # resnetN에서 Pretrained를 가져올때 사용(CUDA가 적용되지 않을수 있으므로)
-resnetN = resnet152(pretrained=True)
-num_classes = 721
-num_ftrs = resnetN.fc.in_features
-resnetN.fc = nn.Linear(num_ftrs, num_classes)
-resnetN.to("cuda:0")
+# resnetN = resnet152(pretrained=True)
+# num_classes = 721
+# num_ftrs = resnetN.fc.in_features
+# resnetN.fc = nn.Linear(num_ftrs, num_classes)
+# resnetN.to("cuda:0")
 # print(resnetN)
 
 # 가중치 시각화 (%##를 최상단에 입력하면 모듈을 설치하고 실행됨)
@@ -222,7 +223,7 @@ resnetN.to("cuda:0")
 
 criterion = nn.CrossEntropyLoss().to(device)
 optimizer = torch.optim.Adam(resnetN.parameters())
-# optimizer = torch.optim.SGD(resnetN.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+# optimizer = torch.optim.SGD(resnetN.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-5)
 lr_sche = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
 
 def acc_check(net, test_set, epoch, save=1):
@@ -249,53 +250,55 @@ def acc_check(net, test_set, epoch, save=1):
 print(len(train_loader))
 
 # Train 시작
-epochs = 120
-for epoch in range(epochs):  # loop over the dataset multiple times
+# epochs = 120
+# for epoch in range(epochs):  # loop over the dataset multiple times
 
-    running_loss = 0.0
-    for i, data in enumerate(train_loader, 0):
-        # get the inputs
-        inputs, labels = data
-        inputs = inputs.to(device)
-        labels = labels.to(device)
+#     running_loss = 0.0
+#     for i, data in enumerate(train_loader, 0):
+#         # get the inputs
+#         inputs, labels = data
+#         inputs = inputs.to(device)
+#         labels = labels.to(device)
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
+#         # zero the parameter gradients
+#         optimizer.zero_grad()
 
-        # forward + backward + optimize
-        outputs = resnetN(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+#         # forward + backward + optimize
+#         outputs = resnetN(inputs)
+#         loss = criterion(outputs, labels)
+#         loss.backward()
+#         optimizer.step()
 
-        # print statistics
-        running_loss += loss.item()
-        if i % 20 == 0:  # print every 5 mini-batches
-            print('[%d, %5d, %d%%] loss: %.3f' %
-                  (epoch + 1, i + 1, 100 * (i + 1) / len(train_loader), running_loss / 5))
-            running_loss = 0.0
-    lr_sche.step()
-    if epoch % 30 == 0:
-      acc = acc_check(resnetN, test_loader, epoch, save=1)
-    else:
-      acc = acc_check(resnetN, test_loader, epoch, save=0)
+#         # print statistics
+#         running_loss += loss.item()
+#         if i % 20 == 0:  # print every 5 mini-batches
+#             print('[%d, %5d, %d%%] loss: %.3f' %
+#                   (epoch + 1, i + 1, 100 * (i + 1) / len(train_loader), running_loss / 5))
+#             running_loss = 0.0
+#     lr_sche.step()
+#     if epoch % 29 == 0:
+#       acc = acc_check(resnetN, test_loader, epoch, save=1)
+#     else:
+#       acc = acc_check(resnetN, test_loader, epoch, save=0)
 
-print('Finished Training')
+# print('Finished Training')
 
 
 # 생성된 모델의 정확도를 측정
-# new_resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 4, True).to(device)
-# new_resnetN.load_state_dict(torch.load('./model/Eiric_TrainType4/ResNet50_Eiric_epoch_120_acc_31.pth'))
-# with torch.no_grad():
-#   for num, data in enumerate(test_loader):
-#     imgs, label = data
-#     imgs = imgs.to(device)
-#     label = label.to(device)
+new_resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device)
+new_resnetN.load_state_dict(torch.load('./model/Eiric_TrainType4/ResNet152_Eiric_epoch_30_acc_99.pth'))
+correct = 0
+total = 0
+with torch.no_grad():
+    for data in test_loader:
+        images, labels = data
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = new_resnetN(images)
 
-#     prediction = new_resnetN(imgs)
-#     print("check", torch.argmax(prediction, 1), label)
-#     correct_prediction = torch.argmax(prediction, 1) == label
+        _, predicted = torch.max(outputs.data, 1)
 
-#     accuracy = correct_prediction.float().mean()
-#     print('Accuracy:', accuracy.item())
-# %%
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+acc = (100 * correct / total)
+print('Accuracy of the test images: %d %%' % acc)
