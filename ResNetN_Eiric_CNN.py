@@ -1,5 +1,4 @@
 import torch
-import numpy
 import torch.nn as nn
 
 import torch.optim as optim
@@ -10,7 +9,7 @@ import torchvision.models.resnet as resnet
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 from torch.utils.data import DataLoader
-from torchvision.models import resnet50
+from torchvision.models import resnet152
 import numpy as np
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -22,7 +21,7 @@ if device == 'cuda':
 
 
 transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
+    # transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor()
 ])
 
@@ -30,7 +29,7 @@ train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/trai
 train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
 
 transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
+    # transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor(),
     transforms.Resize((32, 32))
 ])
@@ -186,16 +185,40 @@ class ResNet(nn.Module):
 
         return x
 
-
+netLayer = 152
 # # resnet 50
 # resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 721, True).to(device) 
 
 # resnet 152
-resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device) 
-
-# resnetN = resnet50(num_classes=4)
-# resnetN.to("cuda:0")
+# resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device) 
 # print(resnetN)
+
+# resnet 152 pretrained
+# resnetN에서 Pretrained를 가져올때 사용(CUDA가 적용되지 않을수 있으므로)
+resnetN = resnet152(pretrained=True)
+num_classes = 721
+num_ftrs = resnetN.fc.in_features
+resnetN.fc = nn.Linear(num_ftrs, num_classes)
+resnetN.to("cuda:0")
+# print(resnetN)
+
+# 가중치 시각화 (%##를 최상단에 입력하면 모듈을 설치하고 실행됨)
+# for w in resnetN.parameters():
+#     w = w.data.cpu()
+#     print(w.shape)
+#     break
+
+# # normalize weights
+# min_w = torch.min(w)
+# w1 = (-1/(2 * min_w)) * w + 0.5
+
+# # make grid to display it
+# grid_size = len(w1)
+# x_grid = [w1[i] for i in range(grid_size)]
+# x_grid = torchvision.utils.make_grid(x_grid, nrow=8, padding=1)
+
+# plt.imshow(x_grid.permute(1, 2, 0))
+
 
 criterion = nn.CrossEntropyLoss().to(device)
 optimizer = torch.optim.Adam(resnetN.parameters())
@@ -220,12 +243,13 @@ def acc_check(net, test_set, epoch, save=1):
     acc = (100 * correct / total)
     print('Accuracy of the test images: %d %%' % acc)
     if save:
-        torch.save(net.state_dict(), "./model/Eiric_TrainType4/ResNet50_Eiric_epoch_{}_acc_{}.pth".format(epoch, int(acc)))
+        torch.save(net.state_dict(), "./model/Eiric_TrainType4/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
     return acc
 
 print(len(train_loader))
-epochs = 120
 
+# Train 시작
+epochs = 120
 for epoch in range(epochs):  # loop over the dataset multiple times
 
     running_loss = 0.0
@@ -274,3 +298,4 @@ print('Finished Training')
 
 #     accuracy = correct_prediction.float().mean()
 #     print('Accuracy:', accuracy.item())
+# %%
