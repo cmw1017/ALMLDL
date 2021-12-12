@@ -27,7 +27,7 @@ transform = transforms.Compose([
 ])
 
 train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/train_data4', transform=transform)
-train_loader = DataLoader(dataset=train_data, batch_size=256, shuffle=True)
+train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
@@ -187,7 +187,12 @@ class ResNet(nn.Module):
         return x
 
 
-resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 721, True).to(device)
+# # resnet 50
+# resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 721, True).to(device) 
+
+# resnet 152
+resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device) 
+
 # resnetN = resnet50(num_classes=4)
 # resnetN.to("cuda:0")
 # print(resnetN)
@@ -241,7 +246,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 5 == 4:  # print every 5 mini-batches
+        if i % 20 == 0:  # print every 5 mini-batches
             print('[%d, %5d, %d%%] loss: %.3f' %
                   (epoch + 1, i + 1, 100 * (i + 1) / len(train_loader), running_loss / 5))
             running_loss = 0.0
