@@ -1,33 +1,19 @@
+#%%
 import torch
 import torch.nn as nn
-
-import torch.optim as optim
 
 import torchvision
 import torchvision.transforms as transforms
 import torchvision.models.resnet as resnet
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import imshow
 from torch.utils.data import DataLoader
-from torchvision.models import resnet152
-import numpy as np
-
+import matplotlib.pyplot as plt
+import csv
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(device)
 
 torch.manual_seed(777)
 if device == 'cuda':
     torch.cuda.manual_seed_all(777)
-
-
-transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor()
-])
-
-train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/train_data', transform=transform)
-train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
@@ -37,10 +23,6 @@ transform = transforms.Compose([
 
 test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/test_data', transform=transform)
 test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=True)
-
-dataiter = iter(train_loader)
-images, labels = dataiter.next()
-print(images.shape)
 
 # ResNet에 필요한 연산 따로 정의하지 않아 라이브러리에서 불러옴
 def conv3x3(in_planes, out_planes, stride=1):
@@ -187,101 +169,66 @@ class ResNet(nn.Module):
 
         return x
 
-netLayer = 152
-# # resnet 50
-# resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 721, True).to(device) 
+# 학습이 완료된 모델 경로
+load_model = './model/Eiric_TrainType4/ResNet152_Eiric_epoch_60_acc_90.pth'
+new_resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device)
+new_resnetN.load_state_dict(torch.load(load_model))
 
-# resnet 152
-resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device) 
-# print(resnetN)
-
-# resnet 152 pretrained
-# resnetN에서 Pretrained를 가져올때 사용(CUDA가 적용되지 않을수 있으므로)
-# resnetN = resnet152(pretrained=True)
-# num_classes = 721
-# num_ftrs = resnetN.fc.in_features
-# resnetN.fc = nn.Linear(num_ftrs, num_classes)
-# resnetN.to("cuda:0")
-# print(resnetN)
-
-# 가중치 시각화 (#%%를 최상단에 입력하면 모듈을 설치하고 실행됨)
-# for w in resnetN.parameters():
-#     w = w.data.cpu()
-#     print(w.shape)
-#     break
-
-# # normalize weights
-# min_w = torch.min(w)
-# w1 = (-1/(2 * min_w)) * w + 0.5
-
-# # make grid to display it
-# grid_size = len(w1)
-# x_grid = [w1[i] for i in range(grid_size)]
-# x_grid = torchvision.utils.make_grid(x_grid, nrow=8, padding=1)
-
-# plt.imshow(x_grid.permute(1, 2, 0))
-
-
-criterion = nn.CrossEntropyLoss().to(device)
-optimizer = torch.optim.Adam(resnetN.parameters())
-# optimizer = torch.optim.SGD(resnetN.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-5)
-lr_sche = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
-
-def acc_check(net, test_set, epoch, save=1):
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for data in test_set:
-            images, labels = data
-            images = images.to(device)
-            labels = labels.to(device)
-            outputs = net(images)
-
-            _, predicted = torch.max(outputs.data, 1)
-
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-
-    acc = (100 * correct / total)
-    print('Accuracy of the test images: %d %%' % acc)
-    if save:
-        torch.save(net.state_dict(), "./model/Eiric_TrainType4/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
-    return acc
-
-print(len(train_loader))
-
-# # Train 시작
-epochs = 60
-for epoch in range(epochs):  # loop over the dataset multiple times
-
-    running_loss = 0.0
-    for i, data in enumerate(train_loader, 0):
-        # get the inputs
-        inputs, labels = data
-        inputs = inputs.to(device)
+# 학습된 모델의 정확도를 측정(Eiricdml Test_data로 측정)
+correct = 0
+total = 0
+with torch.no_grad():
+    for data in test_loader:
+        images, labels = data
+        images = images.to(device)
         labels = labels.to(device)
+        outputs = new_resnetN(images)
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
+        _, predicted = torch.max(outputs.data, 1)
 
-        # forward + backward + optimize
-        outputs = resnetN(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+acc = (100 * correct / total)
+print('Accuracy of the test images: %d %%' % acc)
 
-        # print statistics
-        running_loss += loss.item()
-        if i % 20 == 0:  # print every 5 mini-batches
-            print('[%d, %5d, %d%%] loss: %.3f' %
-                  (epoch, i + 1, 100 * (i + 1) / len(train_loader), running_loss / 5))
-            running_loss = 0.0
-    lr_sche.step()
-    if epoch % 30 == 0:
-        acc = acc_check(resnetN, test_loader, epoch, save=1)
-    else:
-        acc = acc_check(resnetN, test_loader, epoch, save=0)
-acc = acc_check(resnetN, test_loader, epochs, save=1)
 
-print('Finished Training')
 
+# 실제 값을 가지고 테스트
+# 먼저 각 인덱스별 값을 정의
+list_file = open('./data/Eiric/index_list.csv', 'r')
+list_csv = csv.reader(list_file)
+name_list = []
+for list in list_csv:
+    # print("add to list (", list[0], list[1], ")")
+    name_list.append(list[1])
+
+
+# 테스트할 이미지를 가져옴(Eiric에 없는 이미지)
+transform = transforms.Compose([
+    transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor(),
+    transforms.Resize((32, 32))
+])
+test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/test_data', transform=transform)
+test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=False)
+
+# 이미지 출력
+for data in test_loader:
+    img, label = data
+    plt.imshow(torchvision.utils.make_grid(img, normalize=True).permute(1,2,0))
+    plt.show()
+    break
+
+# 학습된 모델이 판단한 이미지 라벨
+with torch.no_grad():
+    for data in test_loader:
+        images, labels = data
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = new_resnetN(images)
+
+        _, predicted = torch.max(outputs.data, 1)
+        predict_list = predicted.tolist()
+        for num in range(len(predict_list)):
+            print(name_list[predict_list[num]])
+# %%
