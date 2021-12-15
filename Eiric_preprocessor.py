@@ -8,27 +8,9 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 import pandas as pd
 import csv
-import h5py
 import numpy as np
 from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
-import torch
-
-
-class HDF5Dataset(Dataset):
-    def __init__(self, file):
-        self.file_object = h5py.File(file, 'r')
-        self.dataset = self.file_object['train_data']['data']
-        self.labelset = self.file_object['train_data']['label']
-    
-    def __len__(self):
-        return len(self.dataset)
-    
-    def __getitem__(self, index):
-        if (index >= len(self.dataset)):
-          raise IndexError()
-        img = self.dataset[index]
-        return torch.FloatTensor(img), self.labelset[index]
+from HDF5Dataset import HDF5Dataset 
 
 
 # 폴더 생성 함수
@@ -246,11 +228,11 @@ def reform_image(path1, path2, file_name):
 
 
 # h5 파일 로드 테스트
-# dataset = HDF5Dataset('./data/Eiric/TrainType3/TrainType3.h5')
-# train_loader = DataLoader(dataset=dataset, batch_size=8, shuffle=True)
-# for data in train_loader:
-#     img, label = data
-#     print(img.shape, label)
-#     plt.imshow(torchvision.utils.make_grid(img[0], normalize=True).permute(1,2,0))
-#     plt.show()
-#     break
+dataset = HDF5Dataset('./data/Eiric/TrainType3/TrainType3.h5', 'train_data')
+train_loader = DataLoader(dataset=dataset, batch_size=8, shuffle=True)
+for data in train_loader:
+    img, label = data
+    print(img.shape, label)
+    plt.imshow(torchvision.utils.make_grid(img[0], normalize=True).permute(1,2,0))
+    plt.show()
+    break
