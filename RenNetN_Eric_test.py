@@ -215,6 +215,7 @@ test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=False)
 # 이미지 출력
 for data in test_loader:
     img, label = data
+    print(img.shape, label)
     plt.imshow(torchvision.utils.make_grid(img, normalize=True).permute(1,2,0))
     plt.show()
     break

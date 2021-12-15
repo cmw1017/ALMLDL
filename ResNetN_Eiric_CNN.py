@@ -6,10 +6,7 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 import torchvision.models.resnet as resnet
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import imshow
 from torch.utils.data import DataLoader
-from torchvision.models import resnet152
 import numpy as np
 
 
@@ -26,22 +23,23 @@ transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/train_data', transform=transform)
+train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType3/train_data', transform=transform)
 train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor(),
-    transforms.Resize((32, 32))
+    transforms.ToTensor()
 ])
 
-test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/test_data', transform=transform)
+test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType3/test_data', transform=transform)
 test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=True)
 
+# 이미지 사이즈 확인하는 검토(굳이 없어도 됨)
 dataiter = iter(train_loader)
 images, labels = dataiter.next()
 print(images.shape)
 
+# ResNet 정의 시작
 # ResNet에 필요한 연산 따로 정의하지 않아 라이브러리에서 불러옴
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -56,7 +54,6 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 class BasicBlock(nn.Module):
     expansion = 1
-
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
@@ -79,7 +76,6 @@ class BasicBlock(nn.Module):
         out += identity
         out = self.relu(out)
         return out
-
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -111,9 +107,7 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
         return out
 
-
 class ResNet(nn.Module):
-
     def __init__(self, block, layers, num_classes=1000, zero_init_residual=False):
         super(ResNet, self).__init__()
         self.inplanes = 16
@@ -187,15 +181,17 @@ class ResNet(nn.Module):
 
         return x
 
+# net의 계층의 수
 netLayer = 152
-# # resnet 50
-# resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 721, True).to(device) 
 
-# resnet 152
-resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device) 
+# # resnet50
+# resnetN = ResNet(resnet.Bottleneck, [3, 4, 6, 3], 722, True).to(device) 
+
+# resnet152
+resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 722, True).to(device) 
 # print(resnetN)
 
-# resnet 152 pretrained
+# resnet152 pretrained
 # resnetN에서 Pretrained를 가져올때 사용(CUDA가 적용되지 않을수 있으므로)
 # resnetN = resnet152(pretrained=True)
 # num_classes = 721
@@ -209,24 +205,22 @@ resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device)
 #     w = w.data.cpu()
 #     print(w.shape)
 #     break
-
 # # normalize weights
 # min_w = torch.min(w)
 # w1 = (-1/(2 * min_w)) * w + 0.5
-
 # # make grid to display it
 # grid_size = len(w1)
 # x_grid = [w1[i] for i in range(grid_size)]
 # x_grid = torchvision.utils.make_grid(x_grid, nrow=8, padding=1)
-
 # plt.imshow(x_grid.permute(1, 2, 0))
 
-
+# 손실 알고리즘 정의 및 옵티마이저 정의(원래는 SGD 였으나 Adam이 더 잘 되는듯하여 변경함)
 criterion = nn.CrossEntropyLoss().to(device)
 optimizer = torch.optim.Adam(resnetN.parameters())
 # optimizer = torch.optim.SGD(resnetN.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-5)
 lr_sche = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
 
+# 정확도 체크 해주는 함수(모델의 저장도 해줌)
 def acc_check(net, test_set, epoch, save=1):
     correct = 0
     total = 0
@@ -245,13 +239,13 @@ def acc_check(net, test_set, epoch, save=1):
     acc = (100 * correct / total)
     print('Accuracy of the test images: %d %%' % acc)
     if save:
-        torch.save(net.state_dict(), "./model/Eiric_TrainType4/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
+        torch.save(net.state_dict(), "./model/Eiric_TrainType3/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
     return acc
 
 print(len(train_loader))
 
-# # Train 시작
-epochs = 60
+# Train 시작
+epochs = 80
 for epoch in range(epochs):  # loop over the dataset multiple times
 
     running_loss = 0.0
@@ -277,7 +271,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
                   (epoch, i + 1, 100 * (i + 1) / len(train_loader), running_loss / 5))
             running_loss = 0.0
     lr_sche.step()
-    if epoch % 30 == 0:
+    if epoch % 20 == 0:
         acc = acc_check(resnetN, test_loader, epoch, save=1)
     else:
         acc = acc_check(resnetN, test_loader, epoch, save=0)
