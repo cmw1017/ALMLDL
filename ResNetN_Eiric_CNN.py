@@ -8,6 +8,9 @@ import torchvision.transforms as transforms
 import torchvision.models.resnet as resnet
 from torch.utils.data import DataLoader
 import numpy as np
+import time
+
+from HDF5Dataset import HDF5Dataset 
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -17,27 +20,41 @@ torch.manual_seed(777)
 if device == 'cuda':
     torch.cuda.manual_seed_all(777)
 
+# 폴더 트리 형식으로 저장되어 있는경우에 사용
+# transform = transforms.Compose([
+#     transforms.Grayscale(num_output_channels=1),
+#     transforms.ToTensor()
+# ])
+# train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/train_data', transform=transform)
+# train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
 
-transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor()
-])
+# transform = transforms.Compose([
+#     transforms.Grayscale(num_output_channels=1),
+#     transforms.ToTensor()
+# ])
+# test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType3/test_data', transform=transform)
+# test_loader = DataLoader(dataset=test_data, batch_size=8, shuffle=True)
 
-train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType3/train_data', transform=transform)
-train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
+# HDF5 형식으로 되어있는 경우에 사용
+dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'train_data')
+train_loader = DataLoader(dataset=dataset, batch_size=128, shuffle=True)
 
-transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor()
-])
+dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'test_data')
+test_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=True)
 
-test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType3/test_data', transform=transform)
-test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=True)
+start = time.time()  # 시작 시간 저장
+for data in train_loader:
+    img, label = data
+    print("time :", time.time() - start)  # 현재시각 - 시작시간 = 실행 시간
+    print(img.shape)
+    break
 
 # 이미지 사이즈 확인하는 검토(굳이 없어도 됨)
 dataiter = iter(train_loader)
 images, labels = dataiter.next()
-print(images.shape)
+labels = labels.type('torch.LongTensor') # HDF5를 사용하여 가져올 경우에 "nll_loss_forward_reduce_cuda_kernel_2d_index" not implemented for 'Int' 에러가 발생하는데 이를 해결하기 위한 수정
+# print(images, labels)
+print(labels.dtype)
 
 # ResNet 정의 시작
 # ResNet에 필요한 연산 따로 정의하지 않아 라이브러리에서 불러옴
@@ -194,7 +211,7 @@ resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 722, True).to(device)
 # resnet152 pretrained
 # resnetN에서 Pretrained를 가져올때 사용(CUDA가 적용되지 않을수 있으므로)
 # resnetN = resnet152(pretrained=True)
-# num_classes = 721
+# num_classes = 722
 # num_ftrs = resnetN.fc.in_features
 # resnetN.fc = nn.Linear(num_ftrs, num_classes)
 # resnetN.to("cuda:0")
@@ -253,6 +270,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
         # get the inputs
         inputs, labels = data
         inputs = inputs.to(device)
+        labels = labels.type('torch.LongTensor') # HDF5를 사용하여 가져올 경우에 "nll_loss_forward_reduce_cuda_kernel_2d_index" not implemented for 'Int' 에러가 발생하는데 이를 해결하기 위한 수정
         labels = labels.to(device)
 
         # zero the parameter gradients
@@ -266,7 +284,7 @@ for epoch in range(epochs):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 20 == 0:  # print every 5 mini-batches
+        if i % 200 == 0:  # print every 5 mini-batches
             print('[%d, %5d, %d%%] loss: %.3f' %
                   (epoch, i + 1, 100 * (i + 1) / len(train_loader), running_loss / 5))
             running_loss = 0.0

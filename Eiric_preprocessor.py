@@ -11,7 +11,7 @@ import csv
 import numpy as np
 from torch.utils.data import DataLoader
 from HDF5Dataset import HDF5Dataset 
-
+import h5py
 
 # 폴더 생성 함수
 def dir_create(dir_name):
@@ -166,7 +166,7 @@ def reform_image(path1, path2, file_name):
 # dataframe = pd.DataFrame(file_list)
 # dataframe.to_csv("./data/Eiric/TrainType4/index.csv", header=False, index=True)
 
-# # 5. 데이터 합성(HDF5)
+# # 5-1. 데이터 합성(HDF5)(바로 사용하기 위함)
 # file_name = 'TrainType4'
 # hdf5_file = h5py.File('./data/Eiric/TrainType4/' + file_name + '.h5','w')
 
@@ -179,7 +179,10 @@ def reform_image(path1, path2, file_name):
 # labels=[]
 # for num, value in enumerate(train_data):
 #     data, label = value
-#     trans = transforms.ToTensor()
+#     trans = transforms.Compose([
+#             transforms.Grayscale(num_output_channels=1),
+#             transforms.ToTensor()
+#             ])
 #     data = trans(data)
 #     datas.append(np.array(data))
 #     labels.append(label)
@@ -193,7 +196,10 @@ def reform_image(path1, path2, file_name):
 # labels=[]
 # for num, value in enumerate(test_data):
 #     data, label = value
-#     trans = transforms.ToTensor()
+#     trans = transforms.Compose([
+#             transforms.Grayscale(num_output_channels=1),
+#             transforms.ToTensor()
+#             ])
 #     data = trans(data)
 #     datas.append(np.array(data))
 #     labels.append(label)
@@ -201,10 +207,35 @@ def reform_image(path1, path2, file_name):
 # print("save HDF5 files")
 # hdf5_file.create_dataset('/test_data/data', data=datas, compression="gzip", compression_opts=9)
 # hdf5_file.create_dataset('/test_data/label', data=labels, compression="gzip", compression_opts=9)
-
+# # HDF5 종료
 # hdf5_file.close()
 
+# # 5-2. 데이터 합성(HDF5)(압축 저장을 위함)
+file_name = 'TrainType4_trans'
+file_path = './data/Eiric/TrainType4/'
+hdf5_file = h5py.File( file_path + file_name + '.h5','w')
 
+hdf5_file.create_group('/train_data')
+hdf5_file.create_group('/test_data')
+file_list = os.listdir(file_path + "train_data")
+
+for name in enumerate(file_list):
+    hdf5_file['/train_data'].create_group(name[1])
+    hdf5_file['/test_data'].create_group(name[1])
+
+train_data = torchvision.datasets.ImageFolder(root= file_path + 'train_data', transform=None)
+for num, value in enumerate(train_data):
+    data, label = value
+    print("train_data", file_list[label], num)
+    hdf5_file.create_dataset('/train_data/' + file_list[label] + "/" + str(num), data=data, compression="gzip", compression_opts=9)
+
+test_data = torchvision.datasets.ImageFolder(root= file_path + 'test_data', transform=None)
+for num, value in enumerate(test_data):
+    data, label = value
+    print("test_data", file_list[label], num)
+    hdf5_file.create_dataset('/test_data/' + file_list[label] + "/" + str(num), data=data, compression="gzip", compression_opts=9)
+# HDF5 종료
+hdf5_file.close()
 
 
 # 유니코드 데이터 셋 출력
@@ -228,11 +259,12 @@ def reform_image(path1, path2, file_name):
 
 
 # h5 파일 로드 테스트
-dataset = HDF5Dataset('./data/Eiric/TrainType3/TrainType3.h5', 'train_data')
-train_loader = DataLoader(dataset=dataset, batch_size=8, shuffle=True)
-for data in train_loader:
-    img, label = data
-    print(img.shape, label)
-    plt.imshow(torchvision.utils.make_grid(img[0], normalize=True).permute(1,2,0))
-    plt.show()
-    break
+# dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'train_data')
+# train_loader = DataLoader(dataset=dataset, batch_size=8, shuffle=True)
+# for data in train_loader:
+#     img, label = data
+#     print(img.shape, label)
+#     plt.imshow(torchvision.utils.make_grid(img[0], normalize=True).permute(1,2,0))
+#     plt.show()
+#     break
+# %%

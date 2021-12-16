@@ -1,6 +1,5 @@
 import torch
 import h5py
-from torch._C import StringType
 from torch.utils.data import Dataset
 
 
@@ -15,6 +14,5 @@ class HDF5Dataset(Dataset):
     
     def __getitem__(self, index):
         if (index >= len(self.dataset)):
-          raise IndexError()
-        img = self.dataset[index]
-        return torch.FloatTensor(img), self.labelset[index]
+            raise IndexError()
+        return self.dataset[index], self.labelset[index]
