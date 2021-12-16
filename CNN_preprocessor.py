@@ -211,31 +211,31 @@ def reform_image(path1, path2, file_name):
 # hdf5_file.close()
 
 # # 5-2. 데이터 합성(HDF5)(압축 저장을 위함)
-file_name = 'TrainType4_trans'
-file_path = './data/Eiric/TrainType4/'
-hdf5_file = h5py.File( file_path + file_name + '.h5','w')
+# file_name = 'TrainType3_trans'
+# file_path = './data/Eiric/TrainType3/'
+# hdf5_file = h5py.File(file_path + file_name + '.h5','w')
 
-hdf5_file.create_group('/train_data')
-hdf5_file.create_group('/test_data')
-file_list = os.listdir(file_path + "train_data")
+# hdf5_file.create_group('/train_data')
+# hdf5_file.create_group('/test_data')
+# file_list = os.listdir(file_path + "train_data")
 
-for name in enumerate(file_list):
-    hdf5_file['/train_data'].create_group(name[1])
-    hdf5_file['/test_data'].create_group(name[1])
+# for name in enumerate(file_list):
+#     hdf5_file['/train_data'].create_group(name[1])
+#     hdf5_file['/test_data'].create_group(name[1])
 
-train_data = torchvision.datasets.ImageFolder(root= file_path + 'train_data', transform=None)
-for num, value in enumerate(train_data):
-    data, label = value
-    print("train_data", file_list[label], num)
-    hdf5_file.create_dataset('/train_data/' + file_list[label] + "/" + str(num), data=data, compression="gzip", compression_opts=9)
+# train_data = torchvision.datasets.ImageFolder(root=file_path + 'train_data', transform=None)
+# for num, value in enumerate(train_data):
+#     data, label = value
+#     print("train_data", file_list[label], num)
+#     hdf5_file.create_dataset('/train_data/' + file_list[label] + "/" + str(num), data=data, compression="gzip", compression_opts=9)
 
-test_data = torchvision.datasets.ImageFolder(root= file_path + 'test_data', transform=None)
-for num, value in enumerate(test_data):
-    data, label = value
-    print("test_data", file_list[label], num)
-    hdf5_file.create_dataset('/test_data/' + file_list[label] + "/" + str(num), data=data, compression="gzip", compression_opts=9)
-# HDF5 종료
-hdf5_file.close()
+# test_data = torchvision.datasets.ImageFolder(root=file_path + 'test_data', transform=None)
+# for num, value in enumerate(test_data):
+#     data, label = value
+#     print("test_data", file_list[label], num)
+#     hdf5_file.create_dataset('/test_data/' + file_list[label] + "/" + str(num), data=data, compression="gzip", compression_opts=9)
+# # HDF5 종료
+# hdf5_file.close()
 
 
 # 유니코드 데이터 셋 출력
