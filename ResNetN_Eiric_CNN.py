@@ -21,33 +21,31 @@ if device == 'cuda':
     torch.cuda.manual_seed_all(777)
 
 # 폴더 트리 형식으로 저장되어 있는경우에 사용
-# transform = transforms.Compose([
-#     transforms.Grayscale(num_output_channels=1),
-#     transforms.ToTensor()
-# ])
-# train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/train_data', transform=transform)
-# train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
+transform = transforms.Compose([
+    transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor()
+])
+train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/test/train_data', transform=transform)
+train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
 
-# transform = transforms.Compose([
-#     transforms.Grayscale(num_output_channels=1),
-#     transforms.ToTensor()
-# ])
-# test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType3/test_data', transform=transform)
-# test_loader = DataLoader(dataset=test_data, batch_size=8, shuffle=True)
+transform = transforms.Compose([
+    transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor()
+])
+test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/test/test_data', transform=transform)
+test_loader = DataLoader(dataset=test_data, batch_size=8, shuffle=True)
 
-# HDF5 형식으로 되어있는 경우에 사용
-dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'train_data')
-train_loader = DataLoader(dataset=dataset, batch_size=128, shuffle=True)
+# # HDF5 형식으로 되어있는 경우에 사용
+# dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'train_data')
+# train_loader = DataLoader(dataset=dataset, batch_size=128, shuffle=True)
 
-dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'test_data')
-test_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=True)
+# dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'test_data')
+# test_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=True)
 
-start = time.time()  # 시작 시간 저장
-for data in train_loader:
-    img, label = data
-    print("time :", time.time() - start)  # 현재시각 - 시작시간 = 실행 시간
-    print(img.shape)
-    break
+# for data in train_loader:
+#     img, label = data
+#     print(img.shape)
+#     break
 
 # 이미지 사이즈 확인하는 검토(굳이 없어도 됨)
 dataiter = iter(train_loader)
@@ -256,7 +254,7 @@ def acc_check(net, test_set, epoch, save=1):
     acc = (100 * correct / total)
     print('Accuracy of the test images: %d %%' % acc)
     if save:
-        torch.save(net.state_dict(), "./model/Eiric_TrainType3/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
+        torch.save(net.state_dict(), "./model/Eiric_TrainType4/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
     return acc
 
 print(len(train_loader))

@@ -1,4 +1,3 @@
-#%%
 import torch
 import torch.nn as nn
 
@@ -17,11 +16,10 @@ if device == 'cuda':
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor(),
-    transforms.Resize((32, 32))
+    transforms.ToTensor()
 ])
 
-test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/test_data', transform=transform)
+test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType5/test_data', transform=transform)
 test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=True)
 
 # ResNet에 필요한 연산 따로 정의하지 않아 라이브러리에서 불러옴
@@ -170,8 +168,8 @@ class ResNet(nn.Module):
         return x
 
 # 학습이 완료된 모델 경로
-load_model = './model/Eiric_TrainType4/ResNet152_Eiric_epoch_60_acc_90.pth'
-new_resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 721, True).to(device)
+load_model = './model/Eiric_TrainType5/ResNet152_Eiric_epoch_70_acc_95.pth'
+new_resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 722, True).to(device)
 new_resnetN.load_state_dict(torch.load(load_model))
 
 # 학습된 모델의 정확도를 측정(Eiricdml Test_data로 측정)
@@ -207,7 +205,7 @@ for list in list_csv:
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor(),
-    transforms.Resize((32, 32))
+    transforms.Resize((64, 64))
 ])
 test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/test_data', transform=transform)
 test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=False)
@@ -232,4 +230,3 @@ with torch.no_grad():
         predict_list = predicted.tolist()
         for num in range(len(predict_list)):
             print(name_list[predict_list[num]])
-# %%
