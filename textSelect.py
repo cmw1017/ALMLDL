@@ -28,7 +28,7 @@ def textSelect(text_result,data_eq_ori,data_PNID_ori) :
         print(data + 'data')
 
         if data ==' ' or data =='\x0c':
-            pass;
+            pass
     
         for j, data2 in enumerate(data_eq_ori):
             "print(str(SequenceMatcher(None,data,data2).ratio()) + ' : ' + data2)"
@@ -43,7 +43,7 @@ def textSelect(text_result,data_eq_ori,data_PNID_ori) :
 
             "print(str(SequenceMatcher(None,data,data2).ratio()) + ' : ' + data2)"
             if SequenceMatcher(None,data,data2).ratio() == 0:
-                break;
+                break
             
             elif SequenceMatcher(None,data,data2).ratio() > ranking_PNID[0]:
                 
@@ -128,7 +128,7 @@ for i, path in enumerate(file_dir_list):
     image_path_ori = os.listdir(path)
     image_path = [file for file in image_path_ori if file.endswith(".png") or file.endswith(".PNG")]
 
-    total_data={};
+    total_data={}
     data_list_eq=[]
     data_list_PNID=[]
     pos_x =[]

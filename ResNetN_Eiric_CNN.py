@@ -25,15 +25,15 @@ transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor()
 ])
-train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/test/train_data', transform=transform)
-train_loader = DataLoader(dataset=train_data, batch_size=128, shuffle=True)
+train_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType5/train_data', transform=transform)
+train_loader = DataLoader(dataset=train_data, batch_size=16, shuffle=True)
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor()
 ])
-test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType4/test/test_data', transform=transform)
-test_loader = DataLoader(dataset=test_data, batch_size=8, shuffle=True)
+test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/TrainType5/test_data', transform=transform)
+test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=True)
 
 # # HDF5 형식으로 되어있는 경우에 사용
 # dataset = HDF5Dataset('./data/Eiric/TrainType4/TrainType4.h5', 'train_data')
@@ -254,13 +254,13 @@ def acc_check(net, test_set, epoch, save=1):
     acc = (100 * correct / total)
     print('Accuracy of the test images: %d %%' % acc)
     if save:
-        torch.save(net.state_dict(), "./model/Eiric_TrainType4/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
+        torch.save(net.state_dict(), "./model/Eiric_TrainType5/ResNet{}_Eiric_epoch_{}_acc_{}.pth".format(netLayer, epoch, int(acc)))
     return acc
 
 print(len(train_loader))
 
 # Train 시작
-epochs = 80
+epochs = 40
 for epoch in range(epochs):  # loop over the dataset multiple times
 
     running_loss = 0.0
@@ -282,12 +282,12 @@ for epoch in range(epochs):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 200 == 0:  # print every 5 mini-batches
+        if i % 50 == 0:  # print every 5 mini-batches
             print('[%d, %5d, %d%%] loss: %.3f' %
                   (epoch, i + 1, 100 * (i + 1) / len(train_loader), running_loss / 5))
             running_loss = 0.0
     lr_sche.step()
-    if epoch % 20 == 0:
+    if epoch % 10 == 0:
         acc = acc_check(resnetN, test_loader, epoch, save=1)
     else:
         acc = acc_check(resnetN, test_loader, epoch, save=0)

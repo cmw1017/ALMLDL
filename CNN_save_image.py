@@ -36,8 +36,8 @@ def save_images(dir_path, HDF5_file_path):
                 print(LV3_file_path)
                 save_image(img, LV3_file_path)
 
-dir_path = "./data/Eiric/TrainType4/test"
-HDF5_fil_path = './data/Eiric/TrainType4/TrainType4_trans.h5'
+dir_path = "./data/Eiric/TrainType5"
+HDF5_fil_path = './data/Eiric/TrainType5/TrainType5_trans.h5'
 save_images(dir_path, HDF5_fil_path)
 
 

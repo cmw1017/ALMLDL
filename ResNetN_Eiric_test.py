@@ -168,7 +168,7 @@ class ResNet(nn.Module):
         return x
 
 # 학습이 완료된 모델 경로
-load_model = './model/Eiric_TrainType5/ResNet152_Eiric_epoch_70_acc_95.pth'
+load_model = './model/Eiric_TrainType5/ResNet152_Eiric_epoch_30_acc_97_local.pth'
 new_resnetN = ResNet(resnet.Bottleneck, [3, 8, 36, 3], 722, True).to(device)
 new_resnetN.load_state_dict(torch.load(load_model))
 
@@ -191,42 +191,42 @@ print('Accuracy of the test images: %d %%' % acc)
 
 
 
-# 실제 값을 가지고 테스트
-# 먼저 각 인덱스별 값을 정의
-list_file = open('./data/Eiric/index_list.csv', 'r')
-list_csv = csv.reader(list_file)
-name_list = []
-for list in list_csv:
-    # print("add to list (", list[0], list[1], ")")
-    name_list.append(list[1])
+# # 실제 값을 가지고 테스트
+# # 먼저 각 인덱스별 값을 정의
+# list_file = open('./data/Eiric/index_list.csv', 'r')
+# list_csv = csv.reader(list_file)
+# name_list = []
+# for list in list_csv:
+#     # print("add to list (", list[0], list[1], ")")
+#     name_list.append(list[1])
 
 
-# 테스트할 이미지를 가져옴(Eiric에 없는 이미지)
-transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor(),
-    transforms.Resize((64, 64))
-])
-test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/test_data', transform=transform)
-test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=False)
+# # 테스트할 이미지를 가져옴(Eiric에 없는 이미지)
+# transform = transforms.Compose([
+#     transforms.Grayscale(num_output_channels=1),
+#     transforms.ToTensor(),
+#     transforms.Resize((64, 64))
+# ])
+# test_data = torchvision.datasets.ImageFolder(root='./data/Eiric/test_data', transform=transform)
+# test_loader = DataLoader(dataset=test_data, batch_size=16, shuffle=False)
 
-# 이미지 출력
-for data in test_loader:
-    img, label = data
-    print(img.shape, label)
-    plt.imshow(torchvision.utils.make_grid(img, normalize=True).permute(1,2,0))
-    plt.show()
-    break
+# # 이미지 출력
+# for data in test_loader:
+#     img, label = data
+#     print(img.shape, label)
+#     plt.imshow(torchvision.utils.make_grid(img, normalize=True).permute(1,2,0))
+#     plt.show()
+#     break
 
-# 학습된 모델이 판단한 이미지 라벨
-with torch.no_grad():
-    for data in test_loader:
-        images, labels = data
-        images = images.to(device)
-        labels = labels.to(device)
-        outputs = new_resnetN(images)
+# # 학습된 모델이 판단한 이미지 라벨
+# with torch.no_grad():
+#     for data in test_loader:
+#         images, labels = data
+#         images = images.to(device)
+#         labels = labels.to(device)
+#         outputs = new_resnetN(images)
 
-        _, predicted = torch.max(outputs.data, 1)
-        predict_list = predicted.tolist()
-        for num in range(len(predict_list)):
-            print(name_list[predict_list[num]])
+#         _, predicted = torch.max(outputs.data, 1)
+#         predict_list = predicted.tolist()
+#         for num in range(len(predict_list)):
+#             print(name_list[predict_list[num]])
