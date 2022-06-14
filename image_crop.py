@@ -1,17 +1,18 @@
 import cv2
 from matplotlib import pyplot as plt
 from os import read
+import os
 import pandas as pd
 import numpy as np
 
 
-def crop_YOLO_img(data_file_pandas,img_file,save_path,fx_set=1,fy_set=1 ):
+def crop_YOLO_img(data_file_pandas, img_file, save_path, img_name, fx_set=1,fy_set=1):
 
     for i in range(len(data_file_pandas)):
-        x= np.float32(data_file_pandas.loc[i][1]) * (img.shape[1])
-        y= np.float32(data_file_pandas.loc[i][2]) * (img.shape[0])
-        width =np.float32(data_file_pandas.loc[i][3]) * (img.shape[1])
-        hight= np.float32(data_file_pandas.loc[i][4]) * (img.shape[0])
+        x= np.float32(data_file_pandas.loc[i][0]) * (img_file.shape[1])
+        y= np.float32(data_file_pandas.loc[i][1]) * (img_file.shape[0])
+        width =np.float32(data_file_pandas.loc[i][2]) * (img_file.shape[1])
+        hight= np.float32(data_file_pandas.loc[i][3]) * (img_file.shape[0])
 
         x_ret_1 = int(x - width *0.55)
         x_ret_2 = int(x + width *0.55)
@@ -23,33 +24,46 @@ def crop_YOLO_img(data_file_pandas,img_file,save_path,fx_set=1,fy_set=1 ):
         crop_image = img_file[y_ret_1 : y_ret_2, x_ret_1:x_ret_2]
         disp_resize1 = cv2.resize(crop_image,dsize,fx=fx_set,fy=fy_set)
         # 저장파일 이름
-        cv2.imwrite(save_path + "acid_1_" + str(i) + ".png",disp_resize1)
+        cv2.imwrite(save_path + "\\" + img_name + "_" + str(i) + ".png", disp_resize1)
 
+def createFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print('Error: Creating directory.' + directory)
 
-# YOLO 결과 데이터
-position_path_file = "det/labels/acid_1.pdf0.txt"
-# 이미지 데이터
-image_path = "det/acid_1.pdf0.png"
-# 저장 경로
-image_save_path = "crop_img/"
+# 이전 text_area_select의 결과가 저장된 폴더
+select_dir = os.getcwd() + '\\data\PNID\PDFs\selected'
 
+# png 이미지가 있는 폴더
+png_dir = "data\\PNID\\PDFs\\divided"
 
-img = cv2.imread(image_path,0) 
-postion = open(position_path_file,"r")
-postion = postion.read().split('\n')
+# crop된 이미지가 저장되는 위치 
+result_path = "data\\PNID\\PDFs\\results"
+file_list = os.listdir(select_dir)
+for i, name in enumerate(file_list):
+    print(name)
+    
+    # 각종 경로 설정
+    position_path_file = select_dir + "\\" + name + "\\modified\\" + name + "_modified.txt"
+    image_path = png_dir + "\\" + name + ".png"
+    createFolder(result_path + "\\" + name)
+    image_save_path = result_path + "\\" + name + "\\crops"
+    createFolder(image_save_path)
 
+    # 이미지 불러오기
+    img = cv2.imread(image_path, 0)
 
-postion_pd = pd.DataFrame(columns=["clss","x_center","y_center","width",'hight'])
-
-for i in range(len(postion)-1):
-    if postion[i].split(' ')[0] == "0":
+    # YOLO 형식 데이터를 불러와서 dataframe 형태로 저장
+    postion = open(position_path_file,"r")
+    postion = postion.read().split('\n')
+    postion_pd = pd.DataFrame(columns=["x_center","y_center","width",'hight'])
+    for i in range(len(postion)-1):
         postion_pd.loc[i] = postion[i].split(' ')
+    postion_pd = postion_pd.reset_index(drop = True)
+    crop_YOLO_img(postion_pd, img, image_save_path, name)
 
-postion_pd = postion_pd.reset_index(drop = True)
-
-
-
-crop_YOLO_img(postion_pd,img,image_save_path)
 
 
 

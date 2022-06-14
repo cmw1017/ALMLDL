@@ -19,8 +19,8 @@ def detect_text_from_image(image_path, output_dir, save_file_name):
     image = read_image(image_path)
 
     # load models
-    refine_net = load_refinenet_model(cuda=True)
-    craft_net = load_craftnet_model(cuda=True)
+    refine_net = load_refinenet_model(cuda=False)
+    craft_net = load_craftnet_model(cuda=False)
 
     # perform prediction
     prediction_result = get_prediction(
@@ -30,7 +30,7 @@ def detect_text_from_image(image_path, output_dir, save_file_name):
         text_threshold=0.7,
         link_threshold=0.4,
         low_text=0.4,
-        cuda=True,
+        cuda=False,
         long_size=1280
     )
 
@@ -129,9 +129,15 @@ def image_save_detection(image_path, output_dir, save_file_name, division):
     cv2.imwrite(result_output_dir + save_file_name + "_division" + str(division) + ".png", image)
 
 
-# 실행예시
-image_path = 'data/PNID/input_datas/TSL_1_pdf12.png' # can be filepath, PIL image or numpy array
-output_dir = 'data/PNID/result_datas/'
-# detect_text_from_image(image_path, output_dir, "outputs")
-image_save_detection(image_path, output_dir, "TSL_1_pdf12", 8)
+# PdfToImg를 통해 나온 이미지를 분석하여 글씨가 있는 부분을 영역지정함(이미지가 큰 경우 분할하여 영역지정)
+# 입력 이미지
+png_dir = 'data/PNID/PDFs/divided/'
+file_list = os.listdir(os.getcwd() + "/" + png_dir)
+output_dir = 'data/PNID/PDFs/selected/'
+
+for i, name in enumerate(file_list):
+    image_path = png_dir + name # can be filepath, PIL image or numpy array, 파일 이름이 한글인 경우 오류 발생가능
+    print(image_path)
+    output_path = output_dir + name.split('.')[0] + "/"
+    image_save_detection(image_path, output_path, name, 8)
 
