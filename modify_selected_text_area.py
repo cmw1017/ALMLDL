@@ -178,19 +178,19 @@ def merge_selected_img(png_dir, detect_dir, file_name, save_dir, division):
 
 
 
-                    for num2, y_plus in y_plus_val.iterrows():
+                    # for num2, y_plus in y_plus_val.iterrows():
 
-                        del_x,del_y,x1,y1,x2,y2= cal_IOU_y(now,y_plus)
+                    #     del_x,del_y,x1,y1,x2,y2= cal_IOU_y(now,y_plus)
 
-                        if del_x >0 and del_y >0:
-                            x1 = x1 *img.shape[1]
-                            x2 = x2 *img.shape[1]
-                            y1 = y1 *img.shape[0]
-                            y2 = y2 *img.shape[0]
-                            y_pos, x_pos,hight,width = Change_big2Yolo(x1,x2,y1,y2,img)
-                            dataframe_del_list.append(now.tolist())
-                            dataframe_del_list.append(y_plus.tolist())
-                            dataframe_update_list.append([y_pos, x_pos,hight,width])
+                    #     if del_x >0 and del_y >0:
+                    #         x1 = x1 *img.shape[1]
+                    #         x2 = x2 *img.shape[1]
+                    #         y1 = y1 *img.shape[0]
+                    #         y2 = y2 *img.shape[0]
+                    #         y_pos, x_pos,hight,width = Change_big2Yolo(x1,x2,y1,y2,img)
+                    #         dataframe_del_list.append(now.tolist())
+                    #         dataframe_del_list.append(y_plus.tolist())
+                    #         dataframe_update_list.append([y_pos, x_pos,hight,width])
 
 
     yolo_format_dataframe_update = pd.DataFrame(dataframe_update_list,columns=['y_pos', 'x_pos','hight','width'])

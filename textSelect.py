@@ -83,6 +83,15 @@ def Data_to_csv(data_ori, path = os.getcwd()):
     for name in data_ori:
         data_ori[name].to_csv(path + "/" + name + ".csv", mode="w",index=False)
 
+def text_modifing(input_text):
+    replace_text = input_text.strip()
+    replace_text = replace_text.replace("|", "")
+    replace_text = replace_text.replace("—", "-")
+    replace_text = replace_text.replace("--", "-")
+    replace_text = replace_text.replace("\n", " ")
+    return replace_text
+
+
 
 # crop된 이미지가 저장되는 위치 
 result_path = "data\\PNID\\PDFs\\results"
@@ -99,8 +108,9 @@ for i, name in enumerate(result_file_list):
         img = cv2.imread(image_dir + "\\" + crop_name, 0)
         text_result1, image_sharp = GetText(img)
         if text_result1.strip() != "":
-            print(text_result1.strip())
-            result_pd.loc[num] = [name, text_result1.strip()]
+            replace_text = text_modifing(text_result1)
+            print(replace_text)
+            result_pd.loc[num] = [name, replace_text]
             num = num + 1
 
 print(result_pd)
